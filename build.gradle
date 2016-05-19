@@ -4,16 +4,20 @@ buildscript {
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:1.3.5.RELEASE")
+        classpath('se.transmode.gradle:gradle-docker:1.2')
     }
 }
+
+group = "vviswana"
 
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'spring-boot'
+apply plugin: 'docker'
 
 jar {
-    baseName = 'gs-rest-service'
+    baseName = 'media-player-omega-service'
     version =  '0.1.0'
 }
 
@@ -26,9 +30,23 @@ targetCompatibility = 1.8
 
 dependencies {
     compile("org.springframework.boot:spring-boot-starter-web")
+    compile("org.springframework:spring-web")
+    compile("com.fasterxml.jackson.core:jackson-databind")
     testCompile("junit:junit")
 }
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.3'
+}
+
+task buildDocker(type: Docker, dependsOn: build) {
+    push = false
+    applicationName = jar.baseName
+    dockerfile = file('./src/main/docker/Dockerfile')
+    doFirst {
+        copy {
+            from jar
+            into stageDir
+        }
+    }
 }
