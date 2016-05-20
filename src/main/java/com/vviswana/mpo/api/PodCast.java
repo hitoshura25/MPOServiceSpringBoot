@@ -1,4 +1,4 @@
-package com.vviswana.mpo;
+package com.vviswana.mpo.api;
 
 import java.util.Collection;
 
