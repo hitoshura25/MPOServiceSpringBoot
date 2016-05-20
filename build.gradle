@@ -8,7 +8,7 @@ buildscript {
     }
 }
 
-group = "vviswana"
+group = "hitoshura25"
 
 apply plugin: 'java'
 apply plugin: 'eclipse'
@@ -17,7 +17,7 @@ apply plugin: 'spring-boot'
 apply plugin: 'docker'
 
 jar {
-    baseName = 'media-player-omega-service'
+    baseName = 'mpospringboot'
     version =  '0.1.0'
 }
 
