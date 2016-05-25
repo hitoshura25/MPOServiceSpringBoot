@@ -33,6 +33,7 @@ dependencies {
     compile("org.springframework:spring-web")
     compile("com.fasterxml.jackson.core:jackson-databind")
     compile("com.rometools:rome:1.6.0")
+    compile("com.rometools:rome-modules:1.6.0")
     testCompile("junit:junit")
 }
 

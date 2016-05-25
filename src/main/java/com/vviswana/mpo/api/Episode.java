@@ -9,4 +9,5 @@ public class Episode {
     public String type;
     public String downloadUrl;
     public long length;
+    public String artworkUrl;
 }
