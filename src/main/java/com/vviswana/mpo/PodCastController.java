@@ -1,5 +1,9 @@
 package com.vviswana.mpo;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.Weigher;
 import com.rometools.modules.itunes.EntryInformation;
 import com.rometools.modules.itunes.ITunes;
 import com.rometools.modules.mediarss.MediaEntryModule;
@@ -11,6 +15,7 @@ import com.rometools.rome.feed.synd.SyndEnclosure;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.feed.synd.SyndImage;
+import com.rometools.rome.io.FeedException;
 import com.rometools.rome.io.SyndFeedInput;
 import com.rometools.rome.io.XmlReader;
 import com.vviswana.mpo.api.Episode;
@@ -18,6 +23,8 @@ import com.vviswana.mpo.api.PodCast;
 import com.vviswana.mpo.api.PodCastDetails;
 import com.vviswana.mpo.itunes.Result;
 import com.vviswana.mpo.itunes.SearchResults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -31,17 +38,24 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 public class PodCastController {
     private static final String ITUNES_URL = "https://itunes.apple.com/search?term={keyword}&entity=podcast";
-
+    private static final Logger log = LoggerFactory.getLogger(PodCastController.class);
     private RestTemplate restTemplate;
+    private LoadingCache<String, SyndFeed> feedCache;
 
     public PodCastController() {
         restTemplate = new RestTemplate();
@@ -53,22 +67,22 @@ public class PodCastController {
         jsonConverter.setSupportedMediaTypes(supportedMediaTypes);
         converters.add(jsonConverter);
         restTemplate.setMessageConverters(converters);
+        feedCache = createCache();
     }
 
-    @RequestMapping("/podcasts")
+    @RequestMapping(value = "/podcasts", produces=APPLICATION_JSON_VALUE)
     public Collection<PodCast> getPodCasts(@RequestParam(value="keyword") final String name) {
         return searchiTunes(name);
     }
 
-    @RequestMapping("/podcastdetails")
+    @RequestMapping(value = "/podcastdetails", produces=APPLICATION_JSON_VALUE)
     public PodCastDetails getPodCastDetails(
             @RequestParam(value="feedUrl") final String feedUrl,
             @RequestParam(value="maxEpisodes", required=false) final Integer maxEpisodes) {
-        final SyndFeedInput input = new SyndFeedInput();
         PodCastDetails details;
 
         try {
-            final SyndFeed feed = input.build(new XmlReader(new URL(feedUrl)));
+            final SyndFeed feed = feedCache.get(feedUrl);
             final SyndImage image = feed.getImage();
             details = new PodCastDetails(feed.getTitle(), feed.getDescription(), image != null ? image.getUrl() : null);
             int currentEpisode = 0;
@@ -83,10 +97,51 @@ public class PodCastController {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.warn("Error getting podcast details", e);
             throw new RuntimeException("Error getting podcast details");
         }
         return details;
+    }
+
+    @RequestMapping(value = "/podcastupdate",produces=APPLICATION_JSON_VALUE)
+    public Episode getPodcastUpdate(
+            @RequestParam(value="feedUrl") final String feedUrl,
+            @RequestParam(value="publishTimestamp", required=false) final Long publishTimestamp) {
+        Episode episode = null;
+        try {
+            final SyndFeed feed = feedCache.get(feedUrl);
+            if (feed.getEntries() != null && feed.getEntries().size() > 0) {
+                final SyndEntry entry = feed.getEntries().get(0);
+                if (publishTimestamp == null || entry.getPublishedDate().compareTo(new Date(publishTimestamp)) > 0) {
+                    episode = createEpisode(entry);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Error getting podcast update", e);
+            throw new RuntimeException("Error getting podcast update");
+        }
+
+        return episode;
+    }
+
+    private LoadingCache<String, SyndFeed> createCache() {
+        LoadingCache<String, SyndFeed> cache = CacheBuilder.newBuilder()
+                .expireAfterWrite(15, TimeUnit.MINUTES)
+                .maximumWeight(100000)
+                .weigher(new Weigher<String, SyndFeed>() {
+                    public int weigh(String feedUrl, SyndFeed feed) {
+                        return feed.getEntries().size();
+                    }
+                })
+                .build(
+                        new CacheLoader<String, SyndFeed>() {
+                            public SyndFeed load(String feedUrl) throws IOException, FeedException {
+                                final SyndFeedInput input = new SyndFeedInput();
+                                return input.build(new XmlReader(new URL(feedUrl)));
+                            }
+                        });
+
+        return cache;
     }
 
     private Episode createEpisode(final SyndEntry entry) {
@@ -154,7 +209,7 @@ public class PodCastController {
         List<PodCast> podCasts = new ArrayList<>();
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setContentType(APPLICATION_JSON);
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
         ResponseEntity<SearchResults> response = restTemplate.exchange(ITUNES_URL, HttpMethod.GET, entity,
