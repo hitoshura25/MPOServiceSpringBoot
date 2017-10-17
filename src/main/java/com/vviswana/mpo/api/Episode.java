@@ -8,6 +8,6 @@ public class Episode {
     public Date published;
     public String type;
     public String downloadUrl;
-    public long length;
+    public long length = 0;
     public String artworkUrl;
 }

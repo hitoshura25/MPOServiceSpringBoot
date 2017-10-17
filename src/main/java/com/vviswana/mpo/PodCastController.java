@@ -187,7 +187,12 @@ public class PodCastController {
         Thumbnail thumbnail = null;
 
         if (mediaContents != null && mediaContents.length > 0) {
-            metadata = mediaContents[0].getMetadata();
+            MediaContent mediaContent = mediaContents[0];
+            metadata = mediaContent.getMetadata();
+
+            if (episode.length == 0 && mediaContent.getDuration() != null) {
+                episode.length = mediaContents[0].getDuration();
+            }
         }
 
         if (metadata != null && metadata.getThumbnail() != null && metadata.getThumbnail().length > 0) {
@@ -197,6 +202,7 @@ public class PodCastController {
         if (thumbnail != null && thumbnail.getUrl() != null) {
             episode.artworkUrl = thumbnail.getUrl().toString();
         }
+
     }
 
     private void processiTunesEntry(Episode episode, EntryInformation entryInformation) {
