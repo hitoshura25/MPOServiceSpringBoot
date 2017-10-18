@@ -32,7 +32,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -159,7 +158,6 @@ public class PodCastController {
     private void processEnclosures(final Episode episode, final SyndEntry entry) {
         if (entry.getEnclosures() != null && entry.getEnclosures().size() > 0) {
             SyndEnclosure enclosure = entry.getEnclosures().get(0);
-            episode.length = enclosure.getLength();
             episode.type = enclosure.getType();
             episode.downloadUrl = enclosure.getUrl();
         }
@@ -172,10 +170,6 @@ public class PodCastController {
                     processRssMedia(episode, (MediaEntryModule) module);
                 } else if (ITunes.URI.equals(module.getUri())) {
                     processiTunesEntry(episode, (EntryInformation) module);
-                }
-
-                if (!StringUtils.isEmpty(episode.artworkUrl)) {
-                    break;
                 }
             }
         }
@@ -190,7 +184,7 @@ public class PodCastController {
             MediaContent mediaContent = mediaContents[0];
             metadata = mediaContent.getMetadata();
 
-            if (episode.length == 0 && mediaContent.getDuration() != null) {
+            if (mediaContent.getDuration() != null && mediaContent.getDuration() > 0) {
                 episode.length = mediaContents[0].getDuration();
             }
         }
@@ -202,12 +196,15 @@ public class PodCastController {
         if (thumbnail != null && thumbnail.getUrl() != null) {
             episode.artworkUrl = thumbnail.getUrl().toString();
         }
-
     }
 
     private void processiTunesEntry(Episode episode, EntryInformation entryInformation) {
         if (entryInformation.getImage() != null) {
             episode.artworkUrl = entryInformation.getImage().toString();
+        }
+
+        if (entryInformation.getDuration() != null) {
+            episode.length = entryInformation.getDuration().getMilliseconds() / 1000;
         }
     }
 
