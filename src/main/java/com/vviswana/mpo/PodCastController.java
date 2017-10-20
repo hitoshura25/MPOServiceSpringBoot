@@ -83,7 +83,13 @@ public class PodCastController {
         try {
             final SyndFeed feed = feedCache.get(feedUrl);
             final SyndImage image = feed.getImage();
-            details = new PodCastDetails(feed.getTitle(), feed.getDescription(), image != null ? image.getUrl() : null);
+            final String feedImageUrl = image != null ? image.getUrl() : null;
+
+            // Also get image if from modules (iTunes)
+            final String moduleImageUrl = getImageUrlFromModules(feed);
+
+            details = new PodCastDetails(feed.getTitle(), feed.getDescription(),
+                    moduleImageUrl != null ? moduleImageUrl : feedImageUrl);
             int currentEpisode = 0;
             for (SyndEntry entry : feed.getEntries()) {
                 final Episode episode = createEpisode(entry);
@@ -175,6 +181,22 @@ public class PodCastController {
         }
     }
 
+    private String getImageUrlFromModules(SyndFeed feed) {
+        String imageUrl = null;
+        if (feed.getModules() != null) {
+            for (Module module : feed.getModules()) {
+                if (ITunes.URI.equals(module.getUri())) {
+                    ITunes iTunesModule = (ITunes) module;
+                    if (iTunesModule.getImage() != null) {
+                        imageUrl = iTunesModule.getImage().toString();
+                    }
+                }
+            }
+        }
+
+        return imageUrl;
+    }
+
     private void processRssMedia(final Episode episode, final MediaEntryModule mediaEntryModule) {
         final MediaContent[] mediaContents = mediaEntryModule.getMediaContents();
         Metadata metadata = null;
@@ -223,14 +245,21 @@ public class PodCastController {
             for (Result result : results.getResults()) {
                 PodCast podCast = new PodCast();
                 podCast.name = result.getTrackName();
-                podCast.artworkUrl = result.getArtworkUrl100();
                 podCast.author = result.getArtistName();
                 podCast.genres = result.getGenres();
                 podCast.feedUrl = result.getFeedUrl();
+                setArtworkUrls(podCast, result);
                 podCasts.add(podCast);
             }
         }
 
         return podCasts;
+    }
+
+    private void setArtworkUrls(PodCast podCast, Result result) {
+        podCast.artworkUrl = result.getArtworkUrl600() != null ?
+                result.getArtworkUrl600() : result.getArtworkUrl100();
+        podCast.smallArtworkUrl = result.getArtworkUrl100() != null ?
+                result.getArtworkUrl100() : null;
     }
 }
