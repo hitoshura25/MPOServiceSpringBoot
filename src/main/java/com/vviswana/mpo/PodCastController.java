@@ -11,10 +11,7 @@ import com.rometools.modules.mediarss.types.MediaContent;
 import com.rometools.modules.mediarss.types.Metadata;
 import com.rometools.modules.mediarss.types.Thumbnail;
 import com.rometools.rome.feed.module.Module;
-import com.rometools.rome.feed.synd.SyndEnclosure;
-import com.rometools.rome.feed.synd.SyndEntry;
-import com.rometools.rome.feed.synd.SyndFeed;
-import com.rometools.rome.feed.synd.SyndImage;
+import com.rometools.rome.feed.synd.*;
 import com.rometools.rome.io.FeedException;
 import com.rometools.rome.io.SyndFeedInput;
 import com.rometools.rome.io.XmlReader;
@@ -152,7 +149,8 @@ public class PodCastController {
     private Episode createEpisode(final SyndEntry entry) {
         final Episode episode = new Episode();
         episode.name = entry.getTitle();
-        episode.description = entry.getDescription().getValue();
+        final SyndContent description = entry.getDescription();
+        episode.description = (description != null) ? description.getValue() : null;
         episode.published = entry.getPublishedDate();
 
         processEnclosures(episode, entry);
