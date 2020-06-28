@@ -151,7 +151,7 @@ public class PodCastController {
         episode.name = entry.getTitle();
         final SyndContent description = entry.getDescription();
         episode.description = (description != null) ? description.getValue() : null;
-        episode.published = entry.getPublishedDate();
+        episode.published = entry.getPublishedDate().getTime();
 
         processEnclosures(episode, entry);
         processModules(episode, entry);
