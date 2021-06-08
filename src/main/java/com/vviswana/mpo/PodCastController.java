@@ -66,15 +66,15 @@ public class PodCastController {
         feedCache = createCache();
     }
 
-    @GetMapping(value = "/podcasts", produces=APPLICATION_JSON_VALUE)
-    public Collection<PodCast> getPodCasts(@RequestParam(value="keyword") final String name) {
+    @GetMapping(value = "/podcasts", produces = APPLICATION_JSON_VALUE)
+    public Collection<PodCast> getPodCasts(@RequestParam(value = "keyword") final String name) {
         return searchiTunes(name);
     }
 
-    @GetMapping(value = "/podcastdetails", produces=APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/podcastdetails", produces = APPLICATION_JSON_VALUE)
     public PodCastDetails getPodCastDetails(
-            @RequestParam(value="feedUrl") final String feedUrl,
-            @RequestParam(value="maxEpisodes", required=false) final Integer maxEpisodes) {
+            @RequestParam(value = "feedUrl") final String feedUrl,
+            @RequestParam(value = "maxEpisodes", required = false) final Integer maxEpisodes) {
         PodCastDetails details;
 
         try {
@@ -105,10 +105,10 @@ public class PodCastController {
         return details;
     }
 
-    @GetMapping(value = "/podcastupdate",produces=APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/podcastupdate", produces = APPLICATION_JSON_VALUE)
     public Episode getPodcastUpdate(
-            @RequestParam(value="feedUrl") final String feedUrl,
-            @RequestParam(value="publishTimestamp", required=false) final Long publishTimestamp) {
+            @RequestParam(value = "feedUrl") final String feedUrl,
+            @RequestParam(value = "publishTimestamp", required = false) final Long publishTimestamp) {
         Episode episode = null;
         try {
             final SyndFeed feed = feedCache.get(feedUrl);

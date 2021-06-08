@@ -10,10 +10,9 @@ import com.vviswana.mpo.api.RegisterUserResponse
 import com.vviswana.mpo.api.UserDetails
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.security.oauth2.core.AbstractOAuth2Token
-import org.springframework.security.oauth2.server.resource.authentication.AbstractOAuth2TokenAuthenticationToken
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.context.request.async.DeferredResult
+import java.security.Principal
 import java.util.concurrent.ForkJoinPool
 
 @RestController
@@ -60,9 +59,8 @@ class AuthController {
 
     @GetMapping("/user")
     @PreAuthorize("hasAuthority('SCOPE_profile')")
-    fun <A : AbstractOAuth2TokenAuthenticationToken<AbstractOAuth2Token>> getUserDetails(authentication: A): UserDetails {
-        val principal = authentication.name
-        val user = client.getUser(principal)
+    fun getUserDetails(principal: Principal): UserDetails {
+        val user = client.getUser(principal.name)
         return UserDetails(
             firstName = user.profile.firstName,
             lastName = user.profile.lastName,
