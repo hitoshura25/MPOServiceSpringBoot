@@ -40,6 +40,7 @@ class AuthController {
                 .setFirstName(user.firstName)
                 .setLastName(user.lastName)
                 .setPassword(user.password.toCharArray())
+                .setActive(true)
                 .buildAndCreate(client)
 
             deferredResult.setResult(

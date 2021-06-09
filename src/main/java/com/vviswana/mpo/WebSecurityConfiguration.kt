@@ -13,17 +13,17 @@ open class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
     override fun configure(http: HttpSecurity) {
         http.authorizeRequests()
             // allow anonymous access to certain paths
-            .antMatchers("/podcasts").permitAll()
-            .antMatchers("/podcastdetails").permitAll()
-            .antMatchers("/podcastupdate").permitAll()
-            .antMatchers("/register_user").permitAll()
+            .antMatchers("/podcasts/**").permitAll()
+            .antMatchers("/podcastdetails/**").permitAll()
+            .antMatchers("/podcastupdate/**").permitAll()
+            .antMatchers("/register_user/**").permitAll()
 
             // all other requests
             .anyRequest().authenticated()
             .and()
-            .oauth2ResourceServer().jwt(); // replace .jwt() with .opaqueToken() for Opaque Token case
+            .oauth2ResourceServer().jwt()// replace .jwt() with .opaqueToken() for Opaque Token case
 
         // Send a 401 message to the browser (w/o this, you'll see a blank page)
-        Okta.configureResourceServer401ResponseBody(http);
+        Okta.configureResourceServer401ResponseBody(http)
     }
 }
