@@ -29,14 +29,14 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.net.URL;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -50,15 +50,15 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class PodCastController {
     private static final String ITUNES_URL = "https://itunes.apple.com/search?term={keyword}&entity=podcast";
     private static final Logger log = LoggerFactory.getLogger(PodCastController.class);
-    private RestTemplate restTemplate;
-    private LoadingCache<String, SyndFeed> feedCache;
+    private final RestTemplate restTemplate;
+    private final LoadingCache<String, SyndFeed> feedCache;
 
     public PodCastController() {
         restTemplate = new RestTemplate();
         List<HttpMessageConverter<?>> converters = restTemplate.getMessageConverters();
         MappingJackson2HttpMessageConverter jsonConverter = new MappingJackson2HttpMessageConverter();
         List<MediaType> supportedMediaTypes = new ArrayList<>();
-        supportedMediaTypes.add(new MediaType("text", "javascript", Charset.forName("UTF-8")));
+        supportedMediaTypes.add(new MediaType("text", "javascript", StandardCharsets.UTF_8));
 
         jsonConverter.setSupportedMediaTypes(supportedMediaTypes);
         converters.add(jsonConverter);
@@ -66,15 +66,15 @@ public class PodCastController {
         feedCache = createCache();
     }
 
-    @RequestMapping(value = "/podcasts", produces=APPLICATION_JSON_VALUE)
-    public Collection<PodCast> getPodCasts(@RequestParam(value="keyword") final String name) {
+    @GetMapping(value = "/podcasts", produces = APPLICATION_JSON_VALUE)
+    public Collection<PodCast> getPodCasts(@RequestParam(value = "keyword") final String name) {
         return searchiTunes(name);
     }
 
-    @RequestMapping(value = "/podcastdetails", produces=APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/podcastdetails", produces = APPLICATION_JSON_VALUE)
     public PodCastDetails getPodCastDetails(
-            @RequestParam(value="feedUrl") final String feedUrl,
-            @RequestParam(value="maxEpisodes", required=false) final Integer maxEpisodes) {
+            @RequestParam(value = "feedUrl") final String feedUrl,
+            @RequestParam(value = "maxEpisodes", required = false) final Integer maxEpisodes) {
         PodCastDetails details;
 
         try {
@@ -105,10 +105,10 @@ public class PodCastController {
         return details;
     }
 
-    @RequestMapping(value = "/podcastupdate",produces=APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/podcastupdate", produces = APPLICATION_JSON_VALUE)
     public Episode getPodcastUpdate(
-            @RequestParam(value="feedUrl") final String feedUrl,
-            @RequestParam(value="publishTimestamp", required=false) final Long publishTimestamp) {
+            @RequestParam(value = "feedUrl") final String feedUrl,
+            @RequestParam(value = "publishTimestamp", required = false) final Long publishTimestamp) {
         Episode episode = null;
         try {
             final SyndFeed feed = feedCache.get(feedUrl);
@@ -257,7 +257,6 @@ public class PodCastController {
     private void setArtworkUrls(PodCast podCast, Result result) {
         podCast.artworkUrl = result.getArtworkUrl600() != null ?
                 result.getArtworkUrl600() : result.getArtworkUrl100();
-        podCast.smallArtworkUrl = result.getArtworkUrl100() != null ?
-                result.getArtworkUrl100() : null;
+        podCast.smallArtworkUrl = result.getArtworkUrl100();
     }
 }
