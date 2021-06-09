@@ -32,5 +32,6 @@ open class WebSecurityConfiguration : WebSecurityConfigurerAdapter() {
                 r.getHeader("X-Forwarded-Proto") != null
             })
             .requiresSecure()
+        http.csrf().ignoringAntMatchers("/register_user/**")
     }
 }
