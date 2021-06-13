@@ -6,6 +6,6 @@ public class Episode {
     public long published;
     public String type;
     public String downloadUrl;
-    public long length = 0;
+    public Long length;
     public String artworkUrl;
 }
