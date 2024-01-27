@@ -1,6 +1,10 @@
+FROM gradle:4.7.0-jdk8-alpine AS build
+COPY --chown=gradle:gradle . /home/gradle/src
+WORKDIR /home/gradle/src
+RUN gradle build --no-daemon 
+
 FROM openjdk:8-jdk-alpine
 VOLUME /tmp
-CMD ["./gradlew", "clean", "build"]
 ADD build/libs/mpospringboot*.jar /app.jar
 ADD docker_scripts/run.sh /run.sh
 RUN sh -c 'touch /app.jar'
