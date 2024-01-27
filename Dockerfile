@@ -4,8 +4,11 @@ WORKDIR /home/gradle/src
 RUN gradle build --no-daemon 
 
 FROM openjdk:8-jdk-alpine
-VOLUME /tmp
-ADD build/libs/mpospringboot*.jar /app.jar
-ADD docker_scripts/run.sh /run.sh
-RUN sh -c 'touch /app.jar'
-CMD ["bash","-C", "/run.sh"]
+#VOLUME /tmp
+RUN mkdir /app
+COPY --from=build /home/gradle/src/build/libs/mpospringboot*.jar /app/app.jar
+COPY --from=build /home/gradle/src/docker_scripts/rush.sh /app/run.sh
+#ADD build/libs/mpospringboot*.jar /app.jar
+#ADD docker_scripts/run.sh /run.sh
+RUN sh -c 'touch /app/app.jar'
+CMD ["bash","-C", "/app/run.sh"]
