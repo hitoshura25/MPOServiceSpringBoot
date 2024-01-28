@@ -4,7 +4,7 @@ WORKDIR /home/gradle/src
 RUN gradle build --no-daemon 
 
 FROM openjdk:8-jdk-alpine
-#VOLUME /tmp
+VOLUME /tmp
 RUN mkdir /app
 COPY --from=build /home/gradle/src/build/libs/mpospringboot*.jar /app/app.jar
 COPY --from=build /home/gradle/src/docker_scripts/run.sh /app/run.sh
