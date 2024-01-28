@@ -10,7 +10,7 @@ COPY --from=build /home/gradle/src/build/libs/mpospringboot*.jar /app/app.jar
 COPY --from=build /home/gradle/src/docker_scripts/run.sh /app/run.sh
 #ADD build/libs/mpospringboot*.jar /app.jar
 #ADD docker_scripts/run.sh /run.sh
-#RUN sh -c 'touch /app/app.jar'
+RUN sh -c 'touch /app/app.jar'
 #CMD ["bash","-C", "/app/run.sh"]
 ENTRYPOINT ["java", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseCGroupMemoryLimitForHeap", "-Djava.security.egd=file:/dev/./urandom","-Dserver.port=$PORT","-jar","/app/app.jar"]
 
