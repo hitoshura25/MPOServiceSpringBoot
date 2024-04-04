@@ -12,9 +12,10 @@ plugins {
 }
 
 group = "hitoshura25"
-jar {
-    baseName = 'mpospringboot'
-    version =  '0.1.0'
+
+bootJar {
+    archiveBaseName = 'mpospringboot'
+    archiveVersion = '0.1.0'
 }
 
 repositories {
